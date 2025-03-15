@@ -1,7 +1,10 @@
 use crate::ledger::{
-    application::commands::{
-        add_expense::handler::{AddExpenseCommand, AddExpenseHandler},
-        receive_payment::handler::{ReceivePaymentCommand, ReceivePaymentHandler},
+    application::{
+        commands::{
+            add_expense::handler::{AddExpenseCommand, AddExpenseHandler},
+            receive_payment::handler::{ReceivePaymentCommand, ReceivePaymentHandler},
+        },
+        queries::get_expenses_data_query::{GetExpensesDataQuery, GetExpensesDataQueryHandler},
     },
     infrastructure::adapters::{
         postgre_expense_repository::PostgreExpenseRepository,
@@ -9,7 +12,7 @@ use crate::ledger::{
         real_id_provider::RealIdProvider,
     },
 };
-use actix_web::{post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 
 use super::{add_expense_body, payment_received_body};
 
@@ -56,6 +59,7 @@ pub async fn receive_payment(
     }
 }
 
+#[post("/expenses")]
 pub async fn add_expense(
     expense_repository: web::Data<PostgreExpenseRepository>,
     id_provider: web::Data<RealIdProvider>,
@@ -84,15 +88,11 @@ pub async fn add_expense(
     }
 }
 
-pub async fn get_expenses_data(
-    expense_repository: web::Data<PostgreExpenseRepository>,
-) -> HttpResponse {
-    let query = GetExpensesDataQuery::new();
+#[get("/expenses-data")]
+pub async fn get_expenses_data() -> HttpResponse {
+    let query = GetExpensesDataQuery {};
 
-    match GetExpensesDataQueryHandler::new(expense_repository.get_ref().clone())
-        .execute(query)
-        .await
-    {
+    match GetExpensesDataQueryHandler::new().execute(query).await {
         Ok(response) => HttpResponse::Ok().json(response),
         Err(_) => HttpResponse::InternalServerError().finish(),
     }

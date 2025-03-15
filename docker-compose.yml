@@ -9,3 +9,20 @@ services:
       POSTGRES_PASSWORD: azerty
       POSTGRES_DB: lenavire_db
       TZ: 'Europe/Warsaw'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d lenavire_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://admin:azerty@db:5432/lenavire_db
+    depends_on:
+      db:
+        condition: service_healthy

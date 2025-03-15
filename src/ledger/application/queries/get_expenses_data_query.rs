@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use diesel::prelude::*;
 use diesel::sql_types::{BigInt, Jsonb, Nullable, Text};
 use serde::{Deserialize, Serialize};
@@ -55,7 +56,7 @@ impl GetExpensesDataQueryHandler {
         Self { db_pool: pool }
     }
 
-    pub fn execute(
+    pub async fn execute(
         &self,
         _query: GetExpensesDataQuery,
     ) -> Result<GetExpensesDataQueryResponse, diesel::result::Error> {
@@ -71,11 +72,11 @@ impl GetExpensesDataQueryHandler {
                                 'amount', amount,
                                 'name', name,
                                 'email', email,
-                                'payment_type', "paymentType"
+                                'payment_type', "payment_type"
                             )
                         )
                         FROM (
-                            SELECT * FROM "Payments"
+                            SELECT * FROM "payments"
                             ORDER BY date DESC
                             LIMIT 3
                         ) recent
@@ -92,18 +93,18 @@ impl GetExpensesDataQueryHandler {
                                 email,
                                 SUM(amount) AS total_amount,
                                 MAX(name) AS name
-                            FROM "Payments"
+                            FROM "payments"
                             WHERE date_trunc('month', date) = date_trunc('month', CURRENT_DATE)
                             GROUP BY email
                             ORDER BY total_amount DESC
                             LIMIT 20
                         ) top
                     ) AS top_contributors
-                FROM "Payments"
+                FROM "payments"
             ),
             expense_stats AS (
                 SELECT COALESCE(SUM(amount), 0) AS total_expenses
-                FROM "Expenses"
+                FROM "expenses"
             )
             SELECT 
                 e.total_expenses,
