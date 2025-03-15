@@ -1,0 +1,11 @@
+services:
+  db: 
+    image: postgres:15
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: azerty
+      POSTGRES_DB: lenavire_db
+      TZ: 'Europe/Warsaw'
