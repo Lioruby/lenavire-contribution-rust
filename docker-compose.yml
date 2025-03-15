@@ -8,7 +8,8 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: azerty
       POSTGRES_DB: lenavire_db
-      TZ: 'Europe/Warsaw'
+      TZ: 'Etc/UTC'
+      PGTZ: 'Etc/UTC'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d lenavire_db"]
       interval: 5s

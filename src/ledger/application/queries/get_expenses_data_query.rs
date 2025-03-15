@@ -1,16 +1,16 @@
 use diesel::prelude::*;
-use diesel::sql_types::{BigInt, Nullable, Text};
+use diesel::sql_types::{Float8, Nullable, Text};
 use serde::{Deserialize, Serialize};
 
 use crate::ledger::infrastructure::db::connection::{establish_connection, DBPool};
 
 #[derive(Debug, QueryableByName, Queryable, Deserialize)]
 struct SqlResult {
-    #[diesel(sql_type = BigInt)]
-    total_expenses: i64,
+    #[diesel(sql_type = Float8)]
+    total_expenses: f64,
 
-    #[diesel(sql_type = BigInt)]
-    total_received: i64,
+    #[diesel(sql_type = Float8)]
+    total_received: f64,
 
     #[diesel(sql_type = Nullable<Text>)]
     payments: Option<String>,
@@ -23,16 +23,16 @@ pub struct GetExpensesDataQuery;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetExpensesDataQueryResponse {
-    total_revenue: i64,
-    total_expenses: i64,
-    total_received: i64,
+    total_revenue: f64,
+    total_expenses: f64,
+    total_received: f64,
     payments: Vec<Payment>,
     top_contributors: Vec<TopContributor>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Payment {
-    amount: i64,
+    amount: f64,
     name: String,
     email: String,
     payment_type: String,
@@ -40,7 +40,7 @@ pub struct Payment {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TopContributor {
-    amount: i64,
+    amount: f64,
     name: String,
 }
 
@@ -114,7 +114,13 @@ impl GetExpensesDataQueryHandler {
             CROSS JOIN expense_stats e
         "#;
 
-        let result: SqlResult = diesel::sql_query(query).get_result(&mut conn)?;
+        let result: SqlResult = match diesel::sql_query(query).get_result(&mut conn) {
+            Ok(result) => result,
+            Err(e) => {
+                println!("Error: {}", e);
+                return Err(e);
+            }
+        };
 
         let payments: Vec<Payment> = result
             .payments

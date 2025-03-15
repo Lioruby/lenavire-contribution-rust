@@ -7,3 +7,4 @@ pub mod postgre_expense_repository;
 pub mod postgre_payment_repository;
 pub mod real_date_provider;
 pub mod real_id_provider;
+pub mod websocket_event_stream;

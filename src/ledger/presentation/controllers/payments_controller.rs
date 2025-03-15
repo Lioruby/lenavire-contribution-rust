@@ -7,10 +7,9 @@ use crate::ledger::{
         queries::get_expenses_data_query::{GetExpensesDataQuery, GetExpensesDataQueryHandler},
     },
     infrastructure::adapters::{
-        in_memory_event_stream::InMemoryEventStream,
         postgre_expense_repository::PostgreExpenseRepository,
         postgre_payment_repository::PostgrePaymentRepository, real_date_provider::RealDateProvider,
-        real_id_provider::RealIdProvider,
+        real_id_provider::RealIdProvider, websocket_event_stream::WebSocketEventStream,
     },
 };
 use actix_web::{get, post, web, HttpResponse};
@@ -23,7 +22,7 @@ pub async fn receive_payment(
     id_provider: web::Data<RealIdProvider>,
     date_provider: web::Data<RealDateProvider>,
     expense_repository: web::Data<PostgreExpenseRepository>,
-    event_stream: web::Data<InMemoryEventStream>,
+    event_stream: web::Data<WebSocketEventStream>,
     body: web::Json<payment_received_body::Request>,
 ) -> HttpResponse {
     let body = body.into_inner();
@@ -67,7 +66,7 @@ pub async fn add_expense(
     expense_repository: web::Data<PostgreExpenseRepository>,
     id_provider: web::Data<RealIdProvider>,
     date_provider: web::Data<RealDateProvider>,
-    event_stream: web::Data<InMemoryEventStream>,
+    event_stream: web::Data<WebSocketEventStream>,
     body: web::Json<add_expense_body::Request>,
 ) -> HttpResponse {
     let body = body.into_inner();
