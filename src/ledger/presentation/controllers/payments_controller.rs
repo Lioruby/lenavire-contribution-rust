@@ -83,3 +83,17 @@ pub async fn add_expense(
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
+
+pub async fn get_expenses_data(
+    expense_repository: web::Data<PostgreExpenseRepository>,
+) -> HttpResponse {
+    let query = GetExpensesDataQuery::new();
+
+    match GetExpensesDataQueryHandler::new(expense_repository.get_ref().clone())
+        .execute(query)
+        .await
+    {
+        Ok(response) => HttpResponse::Ok().json(response),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
