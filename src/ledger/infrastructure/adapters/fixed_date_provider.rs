@@ -1,6 +1,6 @@
 use crate::ledger::application::ports::date_provider::DateProvider;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FixedDateProvider {}
 
 impl DateProvider for FixedDateProvider {

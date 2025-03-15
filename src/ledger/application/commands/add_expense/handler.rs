@@ -10,18 +10,14 @@ pub struct AddExpenseCommand {
     pub amount: Amount,
 }
 
-pub struct AddExpenseHandler {
-    pub repository: Box<dyn ExpenseRepository>,
-    pub id_provider: Box<dyn IdProvider>,
-    pub date_provider: Box<dyn DateProvider>,
+pub struct AddExpenseHandler<R: ExpenseRepository, I: IdProvider, D: DateProvider> {
+    pub repository: R,
+    pub id_provider: I,
+    pub date_provider: D,
 }
 
-impl AddExpenseHandler {
-    pub fn new(
-        repository: Box<dyn ExpenseRepository>,
-        id_provider: Box<dyn IdProvider>,
-        date_provider: Box<dyn DateProvider>,
-    ) -> Self {
+impl<R: ExpenseRepository, I: IdProvider, D: DateProvider> AddExpenseHandler<R, I, D> {
+    pub fn new(repository: R, id_provider: I, date_provider: D) -> Self {
         Self {
             repository,
             id_provider,

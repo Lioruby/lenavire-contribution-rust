@@ -9,6 +9,14 @@ pub struct InMemoryExpenseRepository {
     pub expenses: Arc<Mutex<Vec<Expense>>>,
 }
 
+impl InMemoryExpenseRepository {
+    pub fn new() -> Self {
+        Self {
+            expenses: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+}
+
 #[async_trait]
 impl ExpenseRepository for InMemoryExpenseRepository {
     async fn create(&self, expense: Expense) {
