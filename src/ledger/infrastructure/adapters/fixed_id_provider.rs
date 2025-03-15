@@ -1,6 +1,6 @@
 use crate::ledger::application::ports::id_provider::IdProvider;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 
 pub struct FixedIdProvider {}
 

@@ -1,4 +1,5 @@
 use crate::ledger::application::ports::date_provider::DateProvider;
+use crate::ledger::application::ports::event_streams::EventStream;
 use crate::ledger::application::ports::expense_repository::ExpenseRepository;
 use crate::ledger::application::ports::id_provider::IdProvider;
 use crate::ledger::domain::entities::expense::Expense;
@@ -10,18 +11,23 @@ pub struct AddExpenseCommand {
     pub amount: f64,
 }
 
-pub struct AddExpenseHandler<R: ExpenseRepository, I: IdProvider, D: DateProvider> {
+pub struct AddExpenseHandler<R: ExpenseRepository, I: IdProvider, D: DateProvider, ES: EventStream>
+{
     pub repository: R,
     pub id_provider: I,
     pub date_provider: D,
+    pub event_stream: ES,
 }
 
-impl<R: ExpenseRepository, I: IdProvider, D: DateProvider> AddExpenseHandler<R, I, D> {
-    pub fn new(repository: R, id_provider: I, date_provider: D) -> Self {
+impl<R: ExpenseRepository, I: IdProvider, D: DateProvider, ES: EventStream>
+    AddExpenseHandler<R, I, D, ES>
+{
+    pub fn new(repository: R, id_provider: I, date_provider: D, event_stream: ES) -> Self {
         Self {
             repository,
             id_provider,
             date_provider,
+            event_stream,
         }
     }
 
@@ -32,6 +38,7 @@ impl<R: ExpenseRepository, I: IdProvider, D: DateProvider> AddExpenseHandler<R, 
             id: self.id_provider.generate(),
         });
         self.repository.create(expense).await;
+        self.event_stream.send("expense-added").await;
         Ok(())
     }
 }

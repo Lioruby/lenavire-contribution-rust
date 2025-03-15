@@ -1,7 +1,8 @@
 use crate::ledger::{
     application::ports::{
-        date_provider::DateProvider, expense_repository::ExpenseRepository,
-        id_provider::IdProvider, payment_repository::PaymentRepository,
+        date_provider::DateProvider, event_streams::EventStream,
+        expense_repository::ExpenseRepository, id_provider::IdProvider,
+        payment_repository::PaymentRepository,
     },
     domain::{
         entities::{
@@ -25,15 +26,22 @@ pub struct ReceivePaymentHandler<
     I: IdProvider,
     D: DateProvider,
     E: ExpenseRepository,
+    ES: EventStream,
 > {
     pub payment_repository: R,
     pub id_provider: I,
     pub date_provider: D,
     pub expense_repository: E,
+    pub event_stream: ES,
 }
 
-impl<R: PaymentRepository, I: IdProvider, D: DateProvider, E: ExpenseRepository>
-    ReceivePaymentHandler<R, I, D, E>
+impl<
+        R: PaymentRepository,
+        I: IdProvider,
+        D: DateProvider,
+        E: ExpenseRepository,
+        ES: EventStream,
+    > ReceivePaymentHandler<R, I, D, E, ES>
 {
     const TVA_RATE: f64 = 0.2;
 
@@ -42,12 +50,14 @@ impl<R: PaymentRepository, I: IdProvider, D: DateProvider, E: ExpenseRepository>
         id_provider: I,
         date_provider: D,
         expense_repository: E,
+        event_stream: ES,
     ) -> Self {
         Self {
             payment_repository,
             id_provider,
             date_provider,
             expense_repository,
+            event_stream,
         }
     }
 
@@ -57,6 +67,7 @@ impl<R: PaymentRepository, I: IdProvider, D: DateProvider, E: ExpenseRepository>
 
         let expense = self.create_default_tva_expense(&command)?;
         self.expense_repository.create(expense).await;
+        self.event_stream.send("payment-received").await;
         Ok(())
     }
 
