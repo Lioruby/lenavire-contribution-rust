@@ -8,5 +8,6 @@ pub struct Request {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Data {
     pub amount: f64,
-    pub operationType: String,
+    #[serde(rename = "operationType")]
+    pub operation_type: String,
 }

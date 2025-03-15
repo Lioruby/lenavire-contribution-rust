@@ -1,6 +1,6 @@
 use actix_web::{
     middleware::Logger,
-    web::{self, route},
+    web::{self},
     App, HttpServer,
 };
 use log::info;

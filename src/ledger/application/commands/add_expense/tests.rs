@@ -62,4 +62,21 @@ mod tests {
 
         assert_eq!(expenses[0].date, "2021-01-01");
     }
+
+    #[tokio::test]
+    async fn it_should_reject_if_the_amount_is_negative() {
+        let expense_repository = InMemoryExpenseRepository::new();
+        let handler = AddExpenseHandler::new(
+            expense_repository,
+            FixedIdProvider::default(),
+            FixedDateProvider::default(),
+        );
+
+        let command = AddExpenseCommand {
+            amount: -100 as f64,
+        };
+
+        let result = handler.execute(command).await;
+        assert_eq!(result, Err("Amount must be positive".to_string()));
+    }
 }

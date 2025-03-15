@@ -1,6 +1,5 @@
-use async_trait::async_trait;
 use diesel::prelude::*;
-use diesel::sql_types::{BigInt, Jsonb, Nullable, Text};
+use diesel::sql_types::{BigInt, Nullable, Text};
 use serde::{Deserialize, Serialize};
 
 use crate::ledger::infrastructure::db::connection::{establish_connection, DBPool};

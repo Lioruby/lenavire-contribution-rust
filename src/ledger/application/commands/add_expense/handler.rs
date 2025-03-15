@@ -27,7 +27,7 @@ impl<R: ExpenseRepository, I: IdProvider, D: DateProvider> AddExpenseHandler<R, 
 
     pub async fn execute(&self, command: AddExpenseCommand) -> Result<(), String> {
         let expense = Expense::new(ExpenseProps {
-            amount: Amount::new(command.amount),
+            amount: Amount::new(command.amount)?,
             date: self.date_provider.now(),
             id: self.id_provider.generate(),
         });

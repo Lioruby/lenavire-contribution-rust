@@ -12,7 +12,7 @@ use crate::ledger::{
         real_id_provider::RealIdProvider,
     },
 };
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse};
 
 use super::{add_expense_body, payment_received_body};
 
@@ -71,7 +71,7 @@ pub async fn add_expense(
         amount: body.data.amount,
     };
 
-    if body.data.operationType == "income" {
+    if body.data.operation_type == "income" {
         return HttpResponse::Ok().finish();
     }
 

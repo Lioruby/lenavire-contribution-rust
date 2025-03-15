@@ -52,30 +52,33 @@ impl<R: PaymentRepository, I: IdProvider, D: DateProvider, E: ExpenseRepository>
     }
 
     pub async fn execute(&self, command: ReceivePaymentCommand) -> Result<(), String> {
-        let payment = self.create_payment(&command);
+        let payment = self.create_payment(&command)?;
         self.payment_repository.create(payment).await;
 
-        let expense = self.create_default_tva_expense(&command);
+        let expense = self.create_default_tva_expense(&command)?;
         self.expense_repository.create(expense).await;
         Ok(())
     }
 
-    fn create_payment(&self, command: &ReceivePaymentCommand) -> Payment {
-        Payment::new(PaymentProps {
+    fn create_payment(&self, command: &ReceivePaymentCommand) -> Result<Payment, String> {
+        Ok(Payment::new(PaymentProps {
             id: self.id_provider.generate(),
-            amount: Amount::new(command.amount),
+            amount: Amount::new(command.amount)?,
             name: command.name.clone(),
             email: command.email.clone(),
             payment_type: command.payment_type.clone(),
             date: self.date_provider.now(),
-        })
+        }))
     }
 
-    fn create_default_tva_expense(&self, command: &ReceivePaymentCommand) -> Expense {
-        Expense::new(ExpenseProps {
+    fn create_default_tva_expense(
+        &self,
+        command: &ReceivePaymentCommand,
+    ) -> Result<Expense, String> {
+        Ok(Expense::new(ExpenseProps {
             id: self.id_provider.generate(),
-            amount: Amount::new(command.amount * Self::TVA_RATE),
+            amount: Amount::new(command.amount * Self::TVA_RATE)?,
             date: self.date_provider.now(),
-        })
+        }))
     }
 }
