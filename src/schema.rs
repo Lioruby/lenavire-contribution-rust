@@ -5,7 +5,7 @@ diesel::table! {
         id -> Text,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        amount -> Float8,
+        amount -> Int8,
         date -> Timestamp,
     }
 }
@@ -15,7 +15,7 @@ diesel::table! {
         id -> Text,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        amount -> Float8,
+        amount -> Int8,
         name -> Text,
         email -> Text,
         payment_type -> Text,

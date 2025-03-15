@@ -1,38 +1,26 @@
 use diesel::prelude::*;
-use diesel::sql_types::{Float8, Nullable, Text};
 use serde::{Deserialize, Serialize};
 
 use crate::ledger::infrastructure::db::connection::{establish_connection, DBPool};
+use crate::ledger::infrastructure::db::postgre_expense::PostgreExpense;
+use crate::ledger::infrastructure::db::postgre_payment::PostgrePayment;
+use crate::schema;
 
-#[derive(Debug, QueryableByName, Queryable, Deserialize)]
-struct SqlResult {
-    #[diesel(sql_type = Float8)]
-    total_expenses: f64,
-
-    #[diesel(sql_type = Float8)]
-    total_received: f64,
-
-    #[diesel(sql_type = Nullable<Text>)]
-    payments: Option<String>,
-
-    #[diesel(sql_type = Nullable<Text>)]
-    top_contributors: Option<String>,
-}
 #[derive(Debug)]
 pub struct GetExpensesDataQuery;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetExpensesDataQueryResponse {
-    total_revenue: f64,
-    total_expenses: f64,
-    total_received: f64,
+    total_revenue: i64,
+    total_expenses: i64,
+    total_received: i64,
     payments: Vec<Payment>,
     top_contributors: Vec<TopContributor>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Payment {
-    amount: f64,
+    amount: i64,
     name: String,
     email: String,
     payment_type: String,
@@ -40,7 +28,7 @@ pub struct Payment {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TopContributor {
-    amount: f64,
+    amount: i64,
     name: String,
 }
 
@@ -61,83 +49,53 @@ impl GetExpensesDataQueryHandler {
     ) -> Result<GetExpensesDataQueryResponse, diesel::result::Error> {
         let mut conn = self.db_pool.get().expect("DB connection failed");
 
-        let query = r#"
-            WITH payment_stats AS (
-                SELECT 
-                    COALESCE(SUM(amount), 0) AS total_received,
-                    (
-                        SELECT jsonb_agg(
-                            jsonb_build_object(
-                                'amount', amount,
-                                'name', name,
-                                'email', email,
-                                'payment_type', "payment_type"
-                            )
-                        )
-                        FROM (
-                            SELECT * FROM "payments"
-                            ORDER BY date DESC
-                            LIMIT 3
-                        ) recent
-                    ) AS payments,
-                    (
-                        SELECT jsonb_agg(
-                            jsonb_build_object(
-                                'amount', total_amount,
-                                'name', name
-                            )
-                        )
-                        FROM (
-                            SELECT 
-                                email,
-                                SUM(amount) AS total_amount,
-                                MAX(name) AS name
-                            FROM "payments"
-                            WHERE date_trunc('month', date) = date_trunc('month', CURRENT_DATE)
-                            GROUP BY email
-                            ORDER BY total_amount DESC
-                            LIMIT 20
-                        ) top
-                    ) AS top_contributors
-                FROM "payments"
-            ),
-            expense_stats AS (
-                SELECT COALESCE(SUM(amount), 0) AS total_expenses
-                FROM "expenses"
-            )
-            SELECT 
-                e.total_expenses,
-                p.total_received,
-                p.payments,
-                p.top_contributors
-            FROM payment_stats p
-            CROSS JOIN expense_stats e
-        "#;
+        let all_expenses = schema::expenses::table
+            .load::<PostgreExpense>(&mut conn)
+            .expect("Error loading expenses");
 
-        let result: SqlResult = match diesel::sql_query(query).get_result(&mut conn) {
-            Ok(result) => result,
-            Err(e) => {
-                println!("Error: {}", e);
-                return Err(e);
+        let all_payments = schema::payments::table
+            .load::<PostgrePayment>(&mut conn)
+            .expect("Error loading payments");
+
+        let last_3_payments = schema::payments::table
+            .order(schema::payments::date.desc())
+            .limit(3)
+            .load::<PostgrePayment>(&mut conn)
+            .expect("Error loading payments");
+
+        let mut top_contributors: Vec<TopContributor> = vec![];
+
+        for payment in all_payments.clone() {
+            if top_contributors.iter().any(|c| c.name == payment.name) {
+                continue;
             }
-        };
 
-        let payments: Vec<Payment> = result
-            .payments
-            .map(|json_str| serde_json::from_str(&json_str).unwrap_or_else(|_| vec![]))
-            .unwrap_or_else(|| vec![]);
+            let all_person_payments = all_payments
+                .iter()
+                .filter(|p| p.email == payment.email)
+                .map(|p| p.amount)
+                .sum::<i64>();
 
-        let top_contributors: Vec<TopContributor> = result
-            .top_contributors
-            .map(|json_str| serde_json::from_str(&json_str).unwrap_or_else(|_| vec![]))
-            .unwrap_or_else(|| vec![]);
+            top_contributors.push(TopContributor {
+                amount: all_person_payments,
+                name: payment.name.clone(),
+            });
+        }
 
         Ok(GetExpensesDataQueryResponse {
-            total_revenue: result.total_received - result.total_expenses,
-            total_expenses: result.total_expenses,
-            total_received: result.total_received,
-            payments,
-            top_contributors,
+            total_revenue: all_payments.iter().map(|p| p.amount).sum(),
+            total_expenses: all_expenses.iter().map(|e| e.amount).sum(),
+            total_received: all_payments.iter().map(|p| p.amount).sum(),
+            payments: last_3_payments
+                .iter()
+                .map(|p| Payment {
+                    amount: p.amount,
+                    name: p.name.clone(),
+                    email: p.email.clone(),
+                    payment_type: p.payment_type.clone(),
+                })
+                .collect(),
+            top_contributors: top_contributors,
         })
     }
 }

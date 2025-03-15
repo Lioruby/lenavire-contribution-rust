@@ -34,7 +34,7 @@ impl ExpenseRepository for PostgreExpenseRepository {
         let now = chrono::Utc::now().naive_utc();
         let postgre_expense = PostgreExpense {
             id: expense.id,
-            amount: expense.amount.value,
+            amount: expense.amount.value as i64,
             date: NaiveDateTime::parse_from_str(&expense.date, "%Y-%m-%d").unwrap_or(now),
             created_at: now,
             updated_at: now,

@@ -7,10 +7,7 @@ use actix_web::{
 use log::info;
 
 use crate::ledger::{
-    infrastructure::{
-        adapters::websocket_event_stream::WebSocketEventStream, websocket::websocket_route,
-    },
-    presentation::routes,
+    infrastructure::adapters::websocket_event_stream::WebSocketEventStream, presentation::routes,
 };
 
 use super::adapters::{
@@ -49,7 +46,7 @@ pub async fn start_web_server() -> std::io::Result<()> {
             .app_data(app_data_event_stream.clone())
             .wrap(cors)
             .wrap(Logger::default())
-            .route("/ws", web::get().to(websocket_route))
+            // .route("/ws", web::get().to(websocket_route))
             .configure(routes::payment_routes::routes)
     })
     .bind("0.0.0.0:8080")

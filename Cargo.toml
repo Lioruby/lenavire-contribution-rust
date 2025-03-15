@@ -24,6 +24,17 @@ actix-cors = "0.7.1"
 futures-util = "0.3.31"
 actix-web-actors = "4.3.1"
 actix = "0.13.5"
+socketioxide = "0.16.1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
+
+[build]
+target = "aarch64-apple-darwin"
+
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-L", "/usr/local/opt/libpq/lib",
+    "-L", "/usr/local/Cellar/libpq/17.4/lib",
+    "-l", "dylib=pq"
+]

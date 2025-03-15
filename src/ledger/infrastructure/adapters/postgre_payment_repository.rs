@@ -35,7 +35,7 @@ impl PaymentRepository for PostgrePaymentRepository {
 
         let postgre_payment = PostgrePayment {
             id: payment.id,
-            amount: payment.amount.value,
+            amount: payment.amount.value as i64,
             name: payment.name,
             email: payment.email,
             payment_type: payment.payment_type,
