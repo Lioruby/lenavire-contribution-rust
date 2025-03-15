@@ -7,7 +7,7 @@ use crate::ledger::domain::value_objects::amount::Amount;
 
 #[derive(Debug)]
 pub struct AddExpenseCommand {
-    pub amount: Amount,
+    pub amount: f64,
 }
 
 pub struct AddExpenseHandler<R: ExpenseRepository, I: IdProvider, D: DateProvider> {
@@ -27,7 +27,7 @@ impl<R: ExpenseRepository, I: IdProvider, D: DateProvider> AddExpenseHandler<R, 
 
     pub async fn execute(&self, command: AddExpenseCommand) -> Result<(), String> {
         let expense = Expense::new(ExpenseProps {
-            amount: command.amount,
+            amount: Amount::new(command.amount),
             date: self.date_provider.now(),
             id: self.id_provider.generate(),
         });

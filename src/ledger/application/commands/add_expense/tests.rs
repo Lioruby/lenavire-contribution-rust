@@ -2,7 +2,6 @@
 mod tests {
     use crate::ledger::application::commands::add_expense::handler::AddExpenseCommand;
     use crate::ledger::application::commands::add_expense::handler::AddExpenseHandler;
-    use crate::ledger::domain::value_objects::amount::Amount;
     use crate::ledger::infrastructure::adapters::fixed_date_provider::FixedDateProvider;
     use crate::ledger::infrastructure::adapters::fixed_id_provider::FixedIdProvider;
     use crate::ledger::infrastructure::adapters::in_memory_expense_repository::InMemoryExpenseRepository;
@@ -17,9 +16,7 @@ mod tests {
             FixedDateProvider::default(),
         );
 
-        let command = AddExpenseCommand {
-            amount: Amount::new(100 as f64),
-        };
+        let command = AddExpenseCommand { amount: 100 as f64 };
 
         handler.execute(command).await.unwrap();
 
@@ -37,9 +34,7 @@ mod tests {
             FixedDateProvider::default(),
         );
 
-        let command = AddExpenseCommand {
-            amount: Amount::new(100 as f64),
-        };
+        let command = AddExpenseCommand { amount: 100 as f64 };
 
         handler.execute(command).await.unwrap();
 
@@ -59,9 +54,7 @@ mod tests {
             date_provider,
         );
 
-        let command = AddExpenseCommand {
-            amount: Amount::new(100 as f64),
-        };
+        let command = AddExpenseCommand { amount: 100 as f64 };
 
         handler.execute(command).await.unwrap();
 
